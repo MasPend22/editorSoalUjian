@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Soal Ujian</title>
+<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#172554;--blue:#2563eb;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--bg:#f3f6fb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:#101c3c;color:#fff;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.brand{font-weight:800;font-size:19px}.brand small{display:block;font-size:11px;color:#b9c7e5;font-weight:500;margin-top:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button,.filebtn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}
+.primary{background:#2563eb;color:white}.light{background:#fff;color:#172554}.outline{background:transparent;color:#fff;border:1px solid #65759b}
+.wrap{max-width:1440px;margin:22px auto;padding:0 18px;display:grid;grid-template-columns:370px minmax(0,1fr);gap:20px}
+.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 5px 20px #1725540a;height:max-content}
+.panel h2{font-size:15px;margin:0 0 14px}.group{margin:12px 0}.group label{display:block;font-size:11px;font-weight:800;color:#53627a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+input,textarea,select{width:100%;border:1px solid #d7dfeb;border-radius:8px;padding:10px;font:13px inherit;color:var(--ink);background:#fff}
+input:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:#60a5fa}textarea{min-height:110px;resize:vertical;line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.hint{font-size:11px;color:var(--muted);line-height:1.5}
+.upload{display:block;border:1.5px dashed #9db2d5;border-radius:11px;padding:17px;text-align:center;background:#f7faff;color:#29436d;cursor:pointer}
+.upload strong{display:block;font-size:13px;margin:6px}.upload span{font-size:11px;color:#64748b}
+input[type=file]{display:none}.right{min-width:0}.toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;gap:10px;flex-wrap:wrap}.toolbar h2{font-size:16px;margin:0}.status{font-size:12px;color:#64748b}
+.paper{background:white;width:100%;max-width:900px;min-width:0;margin:auto;min-height:1050px;padding:45px 48px 40px;box-shadow:0 8px 35px #17255412;border:1px solid #e3e8f0}
+.exam-head{text-align:center;border-bottom:3px double #111;padding-bottom:10px;margin-bottom:13px;color:#111;font-family:Arial,Helvetica,sans-serif}
+.school{font-size:17px;line-height:1.25;font-weight:800;text-transform:uppercase;overflow-wrap:normal;word-break:normal}.address{font-size:10px;line-height:1.35;margin-top:4px}.exam-title{font-size:16px;line-height:1.25;font-weight:800;margin-top:9px;text-transform:uppercase;overflow-wrap:normal;word-break:normal}.year{font-size:13px;font-weight:700;margin-top:3px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 28px;font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.3;text-align:left;margin:12px 0 14px;color:#111}.meta div{display:flex;gap:6px;align-items:baseline;font:400 12pt/1.3 Arial,Helvetica,sans-serif;text-align:left}.meta b{white-space:nowrap;font-weight:400}.rules-title{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:12pt;line-height:1.3;text-align:left;margin:8px 0 5px}.rules{font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.3;text-align:left;margin:0 0 14px 22px;padding:0;color:#111}.rules li{font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.3;text-align:left;padding-left:2px;margin:2px 0}
+.section-title{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:12pt;margin:9px 0 4px;text-transform:uppercase;break-after:avoid;break-inside:avoid}
+.questions{column-count:2;column-gap:28px;column-rule:1px solid #d8d8d8;column-fill:balance;font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.3;color:#111}
+.qblock{break-inside:avoid;margin:0 0 3px;white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;font-size:12pt;font-weight:400;line-height:inherit}.qblock strong{font-weight:400}.question-editor{width:100%;min-height:440px;border:1px solid #dbe3ef;border-radius:10px;padding:14px;font:12pt/1.3 Arial,Helvetica,sans-serif;white-space:pre-wrap}
+.question-spacing-control{display:flex;align-items:center;gap:9px;margin:8px 0 10px;font-size:12px;color:#344767;font-weight:700}
+.question-spacing-control select{width:auto;min-width:130px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;font-size:12px}
+.question-editor{font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.3}
+#questionPreview{font-family:Arial,Helvetica,sans-serif;font-size:12pt;line-height:1.3}
+#questionPreview .qblock{line-height:inherit;margin-bottom:3px;font-weight:400}\n.question-gap{height:4px;break-inside:avoid}
+
+
+.logo-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.logo-box{border:1px dashed #b8c6da;border-radius:9px;padding:10px;text-align:center;background:#f8faff}
+.logo-box img{width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 6px}.logo-box label{font-size:11px;font-weight:700;color:#344767;cursor:pointer}.logo-box input{display:none}
+.exam-head-inner{display:grid;grid-template-columns:72px 1fr 72px;align-items:center;gap:12px}.exam-head-inner .logo{width:68px;height:68px;object-fit:contain;display:block;visibility:hidden;margin:auto}.exam-head-inner .head-center{text-align:center;min-width:0;padding:0 8px;font-family:Arial,Helvetica,sans-serif}
+.kop-pasted{font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.3;font-weight:700;text-align:center;white-space:pre-line;overflow-wrap:anywhere;margin:0 0 7px}
+.kop-toolbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin:8px 0 6px}
+.kop-toolbar select{width:auto;min-width:88px;max-width:145px;padding:7px 6px;font-size:11px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#172033}
+.kop-toolbar .format-btn{width:32px;min-width:32px;padding:6px 4px;font-size:13px}
+.kop-rich-editor{min-height:155px;max-height:360px;overflow:auto;border:1px solid #cbd5e1;border-radius:8px;padding:12px;background:#fff;color:#111;font:13px/1.15 Arial,sans-serif;outline:none}
+.kop-rich-editor:focus{border-color:#3b82f6;box-shadow:0 0 0 2px #3b82f622}
+.kop-rich-editor:empty:before{content:"Ketik atau tempel isi kop di sini...";color:#94a3b8}
+.kop-pasted{font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.15;font-weight:400;text-align:center;white-space:normal;overflow-wrap:anywhere;margin:0 0 7px}
+.kop-pasted p{margin:0}
+
+.kop-image-preview{display:block;width:100%;max-height:115px;object-fit:contain;margin:0 auto 7px}
+.kop-mode-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kop-mode-buttons button{padding:9px 8px;font-size:11px}
+.kop-mode-buttons button.active{background:#2563eb;color:white}
+.kop-upload-preview{width:100%;max-height:90px;object-fit:contain;background:white;border:1px dashed #b8c6da;border-radius:8px;padding:5px;margin-top:8px}
+}
+.doc-footer{border-top:1px solid #777;margin-top:22px;padding-top:5px;font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:400;line-height:1.2;display:flex;justify-content:space-between;align-items:center;color:#333;text-align:left;text-transform:none;letter-spacing:normal}.doc-footer span{font-family:Arial,Helvetica,sans-serif;font-size:8px;font-weight:400;line-height:1.2;text-transform:none;letter-spacing:normal}.doc-footer>span:last-child{text-align:right}
+.note{font-size:11px;color:#64748b;margin-top:8px}
+@media(max-width:950px){.wrap{grid-template-columns:1fr}.paper{padding:28px 24px}.top{align-items:flex-start;flex-direction:column}}
+
+.paper.landscape{max-width:1200px;width:100%;min-height:820px;padding:34px 42px}
+
+.paper.landscape .questions{column-gap:34px}
+@page{size:A4 portrait;margin:13mm}
+
+@media print{
+ body{background:white}.top,.panel,.toolbar,.note{display:none!important}.wrap{display:block;margin:0;padding:0}.right{width:100%}.paper{max-width:none;min-height:0;border:0;box-shadow:none;padding:0;margin:0}
+ .meta,.meta div,.meta b,.rules-title,.rules,.rules li{font-family:Arial,Helvetica,sans-serif;font-size:12pt;text-align:left}.questions{column-count:2;column-gap:8mm}.exam-head{margin-top:0}
+}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="brand">▤ Generator Soal Ujian <small>Import Word · Edit · Tata letak dua kolom · Cetak PDF</small></div>
+ <div class="actions">
+  <span id="cloudStatus" style="font-size:12px;align-self:center;color:#cbd5e1">Belum login</span>
+  <button class="outline" id="loginBtn" onclick="showAuth()">Login</button>
+  <button class="outline" id="logoutBtn" onclick="logoutCloud()" style="display:none">Keluar</button>
+  <button class="outline" id="openCloudBtn" onclick="openCloudDocs()" style="display:none">Dokumen Saya</button>
+  <button class="primary" id="saveCloudBtn" onclick="saveCloudDoc()" style="display:none">Simpan Online</button>
+  <button class="outline" onclick="window.print()">Cetak / Simpan PDF</button>
+  <button class="light" onclick="resetDoc()">Reset</button>
+ </div>
+</header>
+<main class="wrap">
+ <section id="authPanel" class="panel" style="display:none;grid-column:1/-1;max-width:620px;width:100%;margin:0 auto">
+  <h2>Login Generator Soal Ujian</h2>
+  <p class="hint">Masuk menggunakan akun yang sudah dibuat oleh admin sekolah.</p>
+  <div class="group"><label>Email</label><input id="authEmail" type="email" autocomplete="username" placeholder="email@sekolah.sch.id"></div>
+  <div class="group"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Password akun"></div>
+  <div class="actions">
+   <button class="primary" onclick="loginCloud()">Masuk</button>
+   <button class="light" onclick="hideAuth()">Batal</button>
+  </div>
+  <p id="authMessage" class="hint" role="status"></p>
+ </section>
+ <aside class="panel">
+  <h2>1. Import dokumen Word</h2>
+  <label class="upload" for="wordFile"><div style="font-size:24px">⇧</div><strong>Pilih file Word (.docx)</strong><span>Soal akan dimasukkan ke editor secara otomatis</span></label>
+  <input id="wordFile" type="file" accept=".docx" onchange="importWord(event)">
+  <p class="hint" id="uploadStatus">Belum ada file diimpor. File Word diproses di browser Anda.</p>
+  <hr style="border:0;border-top:1px solid #e6ebf2;margin:17px 0">
+  <h2>2. Identitas ujian & kop</h2>
+  <div class="group"><label>Orientasi kertas</label>
+   <select id="orientation" onchange="setOrientation()">
+    <option value="portrait">Portrait (Tegak)</option>
+    <option value="landscape">Landscape (Mendatar)</option>
+   </select>
+   <p class="hint">Pilihan ini berlaku untuk pratinjau dan PDF soal.</p>
+  </div>
+  <div class="group"><label>Nama sekolah / madrasah</label><input id="school" value="SMP ISLAM AL-MASSYATH NW GUNUNG SESANG" oninput="render()"></div>
+  <div class="group"><label>Alamat / keterangan kop</label><input id="address" value=" " oninput="render()" placeholder="Alamat sekolah, kabupaten, provinsi"></div>
+  <div class="group">
+    <label>Format kop dokumen</label>
+    <div class="kop-mode-buttons">
+     <button type="button" id="kopTextModeBtn" class="light active" onclick="setKopMode('text')">Copy-Paste Teks</button>
+     <button type="button" id="kopImageModeBtn" class="light" onclick="setKopMode('image')">Masukkan Gambar</button>
+    </div>
+    <div id="kopTextPanel" style="margin-top:9px">
+     <label for="kopText" style="text-transform:none;letter-spacing:0">Tempel teks kop dari Word</label>
+     <div class="kop-toolbar">
+      <select id="kopFont" aria-label="Jenis huruf" onchange="applyKopFormat('fontName',this.value)">
+       <option value="Arial">Arial</option><option value="Times New Roman">Times New Roman</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Calibri">Calibri</option>
+      </select>
+      <select id="kopFontSize" aria-label="Ukuran huruf" onchange="applyKopFontSize(this.value)">
+       <option value="2">Kecil</option><option value="3" selected>Normal</option><option value="4">Besar</option><option value="5">Lebih besar</option><option value="6">Judul</option><option value="7">Sangat besar</option>
+      </select>
+      <input id="kopCustomSize" type="number" min="6" max="72" value="13" title="Ukuran huruf dalam pt" aria-label="Ukuran huruf khusus (pt)" style="width:66px;padding:7px 5px;border:1px solid #cbd5e1;border-radius:6px;font-size:11px" />
+      <button type="button" class="light format-btn" title="Terapkan ukuran huruf (pt)" onclick="applyKopCustomSize()">pt</button>
+      <button type="button" class="light format-btn" title="Tebal" onclick="applyKopFormat('bold')"><b>B</b></button>
+      <button type="button" class="light format-btn" title="Miring" onclick="applyKopFormat('italic')"><i>I</i></button>
+      <button type="button" class="light format-btn" title="Garis bawah" onclick="applyKopFormat('underline')"><u>U</u></button>
+      <button type="button" class="light format-btn" title="Rata kiri" onclick="applyKopFormat('justifyLeft')">☰</button>
+      <button type="button" class="light format-btn" title="Rata tengah" onclick="applyKopFormat('justifyCenter')">≡</button>
+      <button type="button" class="light format-btn" title="Rata kanan" onclick="applyKopFormat('justifyRight')">☷</button>
+      <select id="kopLineSpacing" aria-label="Spasi baris" onchange="setKopLineSpacing(this.value)">
+       <option value="1">Spasi 1</option><option value="1.15" selected>Spasi 1,15</option><option value="1.5">Spasi 1,5</option><option value="2">Spasi 2</option>
+      </select>
+     </div>
+     <div id="kopText" class="kop-rich-editor" contenteditable="true" spellcheck="false" oninput="render()" aria-label="Editor teks kop"><div style="text-align:center"><b>YAYASAN PONDOK PESANTREN HASAN AL-MASSYATH NW</b></div><div style="text-align:center"><b><span style="font-size:24px">SMP ISLAM AL-MASSYATH NW GUNUNG SESANG</span></b></div><div style="text-align:center">Alamat: Jalan Muh Ali Gunung Sesang Desa Lando Kecamatan Terara Kab. Lombok Timur-NTB</div><div style="text-align:center">Email: smpislamalmassyathnw@gmail.com&nbsp;&nbsp; Website: smpislamalmassyathnw.schoolpro.id</div></div>
+     <p class="hint">Ketik langsung atau tempel dari Word. Blok teks terlebih dahulu untuk mengubah format. Tekan Enter untuk membuat baris baru. Hasil format akan mengikuti pratinjau dan cetakan.</p>
+    </div>
+    <div id="kopImagePanel" style="display:none;margin-top:9px">
+     <label class="upload" for="kopImageFile"><strong>＋ Pilih gambar kop lengkap</strong><span>PNG, JPG, atau WEBP</span></label>
+     <input id="kopImageFile" type="file" accept="image/*" onchange="loadKopImage(event)">
+     <img id="kopImageThumb" class="kop-upload-preview" alt="Pratinjau gambar kop" style="display:none">
+     <button type="button" class="light" style="margin-top:7px;width:100%" onclick="removeKopImage()">Hapus gambar kop</button>
+     <p class="hint">Unggah gambar identitas kop (logo, nama instansi, alamat). Judul ujian dan tahun pelajaran tetap ditampilkan di bawah gambar.</p>
+    </div>
+   </div>
+   <div class="group" id="separateLogosGroup"><label>Logo kop kiri dan kanan</label><div class="logo-row">
+   <div class="logo-box"><img id="leftLogoThumb" alt="Logo kiri" style="display:none"><label for="leftLogo">＋ Upload logo kiri</label><input id="leftLogo" type="file" accept="image/*" onchange="loadLogo(event,'left')"></div>
+   <div class="logo-box"><img id="rightLogoThumb" alt="Logo kanan" style="display:none"><label for="rightLogo">＋ Upload logo kanan</label><input id="rightLogo" type="file" accept="image/*" onchange="loadLogo(event,'right')"></div>
+  </div><p class="hint">Gunakan gambar PNG/JPG. Logo tampil di kiri dan kanan nama sekolah.</p></div>
+  <div class="group"><label>Judul ujian</label><input id="examTitle" value="SOAL UJIAN SEMESTER AKHIR" oninput="render()"></div>
+  <div class="group"><label>Tahun pelajaran</label><input id="year" value="2025/2026" oninput="render()"></div>
+  <div class="grid2">
+   <div class="group"><label>Mata pelajaran</label><input id="subject" value="Informatika" oninput="render()"></div>
+   <div class="group"><label>Kelas / jurusan</label><input id="grade" value="VIII" oninput="render()"></div>
+   <div class="group"><label>Hari / tanggal</label><input id="date" value=" " oninput="render()" placeholder="Senin, 08 Juni 2026"></div>
+   <div class="group"><label>Waktu</label><input id="duration" value="90 Menit" oninput="render()"></div>
+  </div>
+  <div class="group"><label>Nomor arsip (opsional)</label><input id="archive" value="" oninput="render()" placeholder="Contoh: 011.SMP-I/LTM/IV/2026"></div>
+  <hr style="border:0;border-top:1px solid #e6ebf2;margin:15px 0">
+  <h2>3. Petunjuk umum</h2>
+  <textarea id="rules" oninput="render()">Baca “Basmalah” kemudian tulislah identitas peserta pada lembar jawaban yang telah disediakan.
+Jujur dan hindari kerjasama dalam menjawab soal-soal ujian.
+Laporkan pada pengawas, jika terdapat kalimat yang kurang jelas, rusak atau jumlah soal kurang.
+Mintalah kertas buram kepada pengawas jika diperlukan.
+Periksa pekerjaan Anda sebelum diserahkan kepada pengawas.
+Dilarang menggunakan kalkulator dan membawa HP atau alat komunikasi lainnya ke dalam ruang ujian.
+Baca “Hamdalah” setelah menyelesaikan pekerjaan.</textarea>
+
+  <p class="hint">Satu petunjuk per baris. Isi ini dapat diubah sesuai aturan sekolah.</p>
+ </aside>
+ <section class="right">
+  <div class="toolbar"><h2>Pratinjau dokumen ujian</h2><div class="actions"><button class="primary" onclick="printMode()">Cetak / Simpan PDF Soal</button></div></div>
+  <div class="paper">
+   <div class="exam-head"><div class="exam-head-inner"><img class="logo" id="pLeftLogo"><div class="head-center"><div class="kop-pasted" id="pKopText" style="display:none"></div><img id="pKopImage" class="kop-image-preview" alt="Kop dokumen" style="display:none"><div class="school" id="pSchool"></div><div class="address" id="pAddress"></div><div class="exam-title" id="pTitle"></div><div class="year" id="pYear"></div></div><img class="logo" id="pRightLogo"></div></div>
+   <div class="meta">
+    <div><b>Mata Pelajaran</b><span>:</span><span id="pSubject"></span></div><div><b>Kelas/Jurusan</b><span>:</span><span id="pGrade"></span></div>
+    <div><b>Hari/Tanggal</b><span>:</span><span id="pDate"></span></div><div><b>Waktu</b><span>:</span><span id="pDuration"></span></div>
+   </div>
+   <div class="rules-title">Petunjuk Umum</div><ol class="rules" id="pRules"></ol>
+   <div id="questionPreview" class="questions"></div>
+   <div class="doc-footer"><span>Dokumen Resmi Milik <span id="pFooterSchool"></span></span><span id="pArchive"></span></div>
+  </div>
+  <div class="panel" style="margin-top:18px">
+   <h2>4. Editor isi soal</h2>
+   <p class="hint">Edit teks di bawah. Gunakan baris baru untuk memisahkan soal. Bagian seperti “A. PILIHAN GANDA” atau “C. ESSAI” akan dikenali sebagai judul bagian. Pratinjau akan mengikuti perubahan.</p>
+   <div class="question-spacing-control"><label for="questionLineSpacing">Jarak antarbaris soal:</label><select id="questionLineSpacing" onchange="setQuestionLineSpacing(this.value)"><option value="1">Rapat (1,0)</option><option value="1.15">1,15</option><option value="1.3" selected>Normal (1,3)</option><option value="1.5">1,5</option><option value="2">2,0</option></select></div>
+   <textarea id="questionText" class="question-editor" oninput="renderQuestions()">A. PILIHAN GANDA
+
+1. Berpikir komputasional adalah cara menyelesaikan masalah secara ...
+A. Acak
+B. Sistematis dan logis
+C. Cepat
+D. Manual
+
+2. Tahap memecah masalah menjadi bagian kecil disebut ...
+A. Dekomposisi
+B. Abstraksi
+C. Algoritma
+D. Debugging
+
+3. Mencari kesamaan pola dalam masalah disebut ...
+A. Dekomposisi
+B. Pengenalan pola
+C. Abstraksi
+D. Simulasi
+
+B. PENJODOHAN
+
+Petunjuk: Cocokkan pernyataan pada kolom A dengan jawaban yang tepat pada kolom B.
+1. LAN — a. Jaringan area lokal
+2. URL — b. Alamat situs web
+
+C. ESSAI
+
+1. Jelaskan pengertian berpikir komputasional.
+2. Sebutkan dan jelaskan empat tahapan berpikir komputasional.</textarea>
+   <div class="note">Catatan: gunakan menu browser Cetak → “Save as PDF” untuk menyimpan sebagai PDF ukuran A4. Aktifkan “Background graphics” bila diperlukan.</div>
+  </div>
+ </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let kopMode='text',kopImageData='';
+function applyKopFormat(command,value=null){
+ $('kopText').focus();
+ document.execCommand(command,false,value);
+ render();
+}
+function applyKopFontSize(size){
+ $('kopText').focus();
+ document.execCommand('fontSize',false,size);
+ render();
+}
+function applyKopCustomSize(){
+ const size=Math.max(6,Math.min(72,Number($('kopCustomSize').value)||13));
+ $('kopText').focus();
+ document.execCommand('fontSize',false,7);
+ $('kopText').querySelectorAll('font[size="7"]').forEach(el=>{
+  const span=document.createElement('span');
+  span.style.fontSize=size+'pt';
+  span.innerHTML=el.innerHTML;
+  el.replaceWith(span);
+ });
+ render();
+}
+function setQuestionLineSpacing(value){
+ const spacing=String(value);
+ $('questionText').style.lineHeight=spacing;
+ $('questionPreview').style.lineHeight=spacing;
+ renderQuestions();
+}
+function setKopLineSpacing(value){
+ $('kopText').style.lineHeight=value;
+ render();
+}
+function cleanKopHtml(raw){
+ const parsed=new DOMParser().parseFromString(raw,'text/html');
+ const allowed=new Set(['DIV','P','BR','SPAN','B','STRONG','I','EM','U','UL','OL','LI','SUB','SUP','A','FONT']);
+ const safeStyle=new Set(['font-family','font-size','font-weight','font-style','text-decoration','text-align','line-height','color']);
+ function clean(node){
+  [...node.childNodes].forEach(child=>{
+   if(child.nodeType===1){
+    if(!allowed.has(child.tagName)){child.replaceWith(...child.childNodes);return}
+    [...child.attributes].forEach(attr=>{
+     if(attr.name==='style'){
+      const declarations=[];
+      child.style && [...child.style].forEach(prop=>{
+       if(safeStyle.has(prop)){
+        const val=child.style.getPropertyValue(prop);
+        if(!/url\s*\(|expression\s*\(/i.test(val)) declarations.push(prop+':'+val);
+       }
+      });
+      if(declarations.length) child.setAttribute('style',declarations.join(';')); else child.removeAttribute('style');
+     }else if(attr.name==='href' && child.tagName==='A'){
+      if(!/^(https?:|mailto:)/i.test(attr.value)) child.removeAttribute('href');
+     }else if(attr.name!=='href') child.removeAttribute(attr.name);
+    });
+    clean(child);
+   }else if(child.nodeType!==3){child.remove()}
+  });
+ }
+ clean(parsed.body);
+ return parsed.body.innerHTML;
+}
+function setKopMode(mode){
+ kopMode=mode==='image'?'image':'text';
+ $('kopTextPanel').style.display=kopMode==='text'?'block':'none';
+ $('kopImagePanel').style.display=kopMode==='image'?'block':'none';
+ $('kopTextModeBtn').classList.toggle('active',kopMode==='text');
+ $('kopImageModeBtn').classList.toggle('active',kopMode==='image');
+ $('separateLogosGroup').style.display=kopMode==='text'?'block':'none';
+ render();
+}
+function loadKopImage(ev){
+ const file=ev.target.files&&ev.target.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Pilih file gambar yang valid.');return}
+ const reader=new FileReader();
+ reader.onload=()=>{kopImageData=reader.result;$('kopImageThumb').src=kopImageData;$('kopImageThumb').style.display='block';setKopMode('image')};
+ reader.readAsDataURL(file);
+}
+function removeKopImage(){
+ kopImageData='';$('kopImageThumb').src='';$('kopImageThumb').style.display='none';$('kopImageFile').value='';render();
+}
+function render(){
+ const map={pSchool:'school',pAddress:'address',pTitle:'examTitle',pYear:'year',pSubject:'subject',pGrade:'grade',pDate:'date',pDuration:'duration',pFooterSchool:'school',pArchive:'archive'};
+ Object.entries(map).forEach(([a,b])=>$(a).textContent=$(b).value.trim());
+ const pasted=$('kopText').innerText.trim();
+ $('pKopText').style.display=(kopMode==='text'&&pasted)?'block':'none';
+ $('pKopText').innerHTML=(kopMode==='text')?cleanKopHtml($('kopText').innerHTML):''; $('pKopText').style.lineHeight=$('kopText').style.lineHeight||$('kopLineSpacing').value||'1.15';
+ $('pKopImage').style.display=(kopMode==='image'&&kopImageData)?'block':'none';
+ $('pKopImage').src=(kopMode==='image')?kopImageData:'';
+ $('pSchool').style.display=(kopMode==='text'&&!pasted)?'block':'none';
+ $('pAddress').style.display=(kopMode==='text'&&!pasted)?'block':'none';
+ $('pLeftLogo').style.visibility=(kopMode==='text')?'visible':'hidden';
+ $('pRightLogo').style.visibility=(kopMode==='text')?'visible':'hidden';
+ document.querySelector('.exam-head-inner').style.gridTemplateColumns=(kopMode==='image')?'1fr':'72px 1fr 72px';
+ $('pRules').innerHTML='';
+ $('rules').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).forEach(x=>{let li=document.createElement('li');li.textContent=x;$('pRules').appendChild(li)});
+ renderQuestions();
+}
+function renderQuestions(){
+ const lines=$('questionText').value.split(/\r?\n/), root=$('questionPreview');
+ root.innerHTML='';
+ // Hanya judul bagian ujian yang dikenali sebagai heading.
+ // Baris seperti "A. NWDI", "B. NBDI", atau "C. PGA" tetap menjadi teks/opsi biasa.
+ const sectionPattern=/^[A-Z]\.\s*(PILIHAN\s+GANDA|PILIHAN\s+GANDA\s+KOMPLEKS|PENJODOHAN|MENJODOHKAN|ESSAI|ESAI|URAIAN|ISIAN|BENAR\s+SALAH|MENENTUKAN\s+PASANGAN)\s*$/i;
+ let previousWasBlank=false;
+ lines.forEach(line=>{
+  const t=line.trim();
+  if(!t){
+   if(root.lastElementChild && !previousWasBlank){
+    const gap=document.createElement('div');
+    gap.className='question-gap';
+    root.appendChild(gap);
+   }
+   previousWasBlank=true;
+   return;
+  }
+  previousWasBlank=false;
+  if(sectionPattern.test(t)){
+   const h=document.createElement('div');
+   h.className='section-title';
+   h.textContent=t;
+   root.appendChild(h);
+   return;
+  }
+  const p=document.createElement('div');
+  p.className='qblock';
+  p.textContent=t;
+  root.appendChild(p);
+ });
+}
+async function importWord(ev){
+ const file=ev.target.files[0];if(!file)return;
+ $('uploadStatus').textContent='Membaca dokumen...';
+ try{
+  if(!window.mammoth)throw new Error('Pustaka pembaca Word belum termuat. Periksa koneksi internet lalu muat ulang aplikasi.');
+  const buffer=await file.arrayBuffer();
+  const result=await mammoth.extractRawText({arrayBuffer:buffer});
+  const text=result.value.trim();
+  if(!text)throw new Error('Tidak ditemukan teks pada dokumen.');
+  $('questionText').value=text;
+  $('uploadStatus').textContent='Berhasil mengimpor '+file.name+'. Periksa kembali susunan soal di editor.';
+  renderQuestions();
+ }catch(e){$('uploadStatus').textContent='Gagal mengimpor: '+e.message}
+}
+function resetDoc(){
+ if(!confirm('Kembalikan isi editor dan identitas ke contoh awal?'))return;
+ location.reload();
+}
+
+
+function setOrientation(){
+ const mode=$('orientation').value;
+ const landscape=mode==='landscape';
+ document.querySelector('.paper').classList.toggle('landscape',landscape);
+ let style=$('dynamicPageStyle');
+ if(!style){style=document.createElement('style');style.id='dynamicPageStyle';document.head.appendChild(style)}
+ style.textContent='@page { size: A4 '+(landscape?'landscape':'portrait')+'; margin: 13mm; }';
+}
+let logoData={left:null,right:null};
+function loadLogo(ev,side){const f=ev.target.files&&ev.target.files[0];if(!f)return;if(!f.type.startsWith('image/')){alert('Pilih file gambar.');return}const reader=new FileReader();reader.onload=()=>{logoData[side]=reader.result;const thumb=$(side+'LogoThumb');thumb.src=reader.result;thumb.style.display='block';const target=$('p'+(side==='left'?'Left':'Right')+'Logo');target.src=reader.result;target.style.visibility='visible'};reader.readAsDataURL(f)}
+function printMode(){window.print();}
+setOrientation();
+setQuestionLineSpacing($('questionLineSpacing').value);
+render();
+
+// ===== Integrasi Supabase: login dan penyimpanan dokumen pribadi =====
+// URL dan publishable key adalah konfigurasi publik. Keamanan data tetap
+// ditegakkan oleh Row Level Security (RLS) pada database.
+const SUPABASE_URL = 'https://ubyvjltljsccpstxxctg.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_BmIIeS18mlu-k8OTc8hMGA__6KzBg-m';
+const cloudClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+let cloudUser = null;
+let currentCloudDocId = null;
+
+function cloudMessage(message, isError=false) {
+  const el = $('cloudStatus');
+  if (el) {
+    el.textContent = message;
+    el.style.color = isError ? '#fecaca' : '#bbf7d0';
+  }
+}
+function showAuth() {
+  $('authPanel').style.display = 'block';
+  $('authPanel').scrollIntoView({behavior:'smooth', block:'center'});
+}
+function hideAuth() { $('authPanel').style.display = 'none'; }
+function setCloudLoggedIn(user) {
+  cloudUser = user || null;
+  $('loginBtn').style.display = user ? 'none' : 'inline-block';
+  $('logoutBtn').style.display = user ? 'inline-block' : 'none';
+  $('openCloudBtn').style.display = user ? 'inline-block' : 'none';
+  $('saveCloudBtn').style.display = user ? 'inline-block' : 'none';
+  cloudMessage(user ? ('Login: ' + (user.email || 'pengguna')) : 'Belum login');
+}
+async function loginCloud() {
+  const email = $('authEmail').value.trim();
+  const password = $('authPassword').value;
+  $('authMessage').textContent = 'Memeriksa akun...';
+  if (!email || !password) { $('authMessage').textContent = 'Email dan password wajib diisi.'; return; }
+  const {data, error} = await cloudClient.auth.signInWithPassword({email, password});
+  if (error) { $('authMessage').textContent = 'Login gagal: ' + error.message; return; }
+  setCloudLoggedIn(data.user);
+  $('authPassword').value = '';
+  $('authMessage').textContent = 'Login berhasil.';
+  hideAuth();
+}
+async function logoutCloud() {
+  const {error} = await cloudClient.auth.signOut();
+  if (error) { cloudMessage('Gagal keluar: ' + error.message, true); return; }
+  currentCloudDocId = null;
+  setCloudLoggedIn(null);
+}
+function collectExamDocument() {
+  const value = id => $(id) ? $(id).value : '';
+  return {
+    title: value('examTitle') || 'Dokumen Ujian',
+    subject: value('subject'),
+    grade_class: value('grade'),
+    exam_date: null,
+    duration_minutes: null,
+    instructions: value('rules'),
+    question_content: {
+      questionText: value('questionText'),
+      orientation: value('orientation'),
+      school: value('school'),
+      address: value('address'),
+      kopMode,
+      kopText: $('kopText') ? $('kopText').innerHTML : '',
+      kopImageData: kopImageData || '',
+      logoData: logoData || {left:null,right:null},
+      examTitle: value('examTitle'),
+      year: value('year'),
+      subject: value('subject'),
+      grade: value('grade'),
+      date: value('date'),
+      duration: value('duration'),
+      archive: value('archive'),
+      rules: value('rules'),
+      questionLineSpacing: value('questionLineSpacing'),
+      kopLineSpacing: $('kopLineSpacing') ? value('kopLineSpacing') : '1.15'
+    },
+    status: 'draft'
+  };
+}
+function restoreExamDocument(row) {
+  const c = row.question_content || {};
+  const setVal = (id, val) => { if ($(id) && val !== undefined && val !== null) $(id).value = val; };
+  setVal('examTitle', c.examTitle ?? row.title);
+  setVal('school', c.school);
+  setVal('address', c.address);
+  setVal('year', c.year);
+  setVal('subject', c.subject ?? row.subject);
+  setVal('grade', c.grade ?? row.grade_class);
+  setVal('date', c.date);
+  setVal('duration', c.duration);
+  setVal('archive', c.archive);
+  setVal('rules', c.rules ?? row.instructions);
+  setVal('questionText', c.questionText);
+  setVal('orientation', c.orientation);
+  setVal('questionLineSpacing', c.questionLineSpacing);
+  if ($('kopText') && c.kopText !== undefined) $('kopText').innerHTML = c.kopText;
+  if (c.kopMode) kopMode = c.kopMode;
+  if (c.kopImageData !== undefined) kopImageData = c.kopImageData || '';
+  if (c.logoData) logoData = c.logoData;
+  if (c.logoData) {
+    ['left','right'].forEach(side => {
+      const data = c.logoData[side];
+      const thumb = $(side+'LogoThumb');
+      const preview = $('p'+(side==='left'?'Left':'Right')+'Logo');
+      if (data && thumb && preview) {
+        thumb.src = data; thumb.style.display = 'block';
+        preview.src = data; preview.style.visibility = 'visible';
+      } else if (thumb && preview) {
+        thumb.style.display = 'none'; preview.style.visibility = 'hidden';
+      }
+    });
+  }
+  if (c.kopImageData && $('pKopImage')) {
+    $('pKopImage').src = c.kopImageData;
+    $('pKopImage').style.display = kopMode === 'image' ? 'block' : 'none';
+  }
+  if ($('kopTextPanel')) $('kopTextPanel').style.display = kopMode === 'text' ? 'block' : 'none';
+  if ($('kopImagePanel')) $('kopImagePanel').style.display = kopMode === 'image' ? 'block' : 'none';
+  if (typeof setOrientation === 'function') setOrientation();
+  if (typeof render === 'function') render();
+  if (typeof renderQuestions === 'function') renderQuestions();
+  currentCloudDocId = row.id;
+}
+async function saveCloudDoc() {
+  if (!cloudUser) { showAuth(); return; }
+  const payload = collectExamDocument();
+  payload.owner_id = cloudUser.id;
+  payload.updated_at = new Date().toISOString();
+  cloudMessage('Menyimpan dokumen...');
+  let result;
+  if (currentCloudDocId) {
+    result = await cloudClient.from('exam_documents')
+      .update(payload).eq('id', currentCloudDocId).select().single();
+  } else {
+    result = await cloudClient.from('exam_documents')
+      .insert(payload).select().single();
+  }
+  if (result.error) { cloudMessage('Gagal menyimpan: ' + result.error.message, true); return; }
+  currentCloudDocId = result.data.id;
+  cloudMessage('Tersimpan online ✓');
+  alert('Dokumen berhasil disimpan ke database online.');
+}
+async function openCloudDocs() {
+  if (!cloudUser) { showAuth(); return; }
+  cloudMessage('Memuat dokumen...');
+  const {data, error} = await cloudClient.from('exam_documents')
+    .select('id,title,subject,grade_class,updated_at')
+    .order('updated_at', {ascending:false});
+  if (error) { cloudMessage('Gagal memuat dokumen: ' + error.message, true); return; }
+  if (!data || !data.length) { alert('Belum ada dokumen tersimpan untuk akun ini.'); cloudMessage('Tidak ada dokumen tersimpan.'); return; }
+  const menu = data.map((d,i) => `${i+1}. ${d.title} — ${d.subject || 'Tanpa mapel'} — ${new Date(d.updated_at).toLocaleString('id-ID')}`).join('\n');
+  const choice = prompt('Pilih nomor dokumen untuk dibuka:\n\n' + menu);
+  if (choice === null) { cloudMessage('Siap.'); return; }
+  const index = Number(choice)-1;
+  if (!Number.isInteger(index) || index < 0 || index >= data.length) { alert('Nomor pilihan tidak valid.'); return; }
+  const {data:doc, error:loadError} = await cloudClient.from('exam_documents')
+    .select('*').eq('id', data[index].id).single();
+  if (loadError) { cloudMessage('Gagal membuka dokumen: ' + loadError.message, true); return; }
+  restoreExamDocument(doc);
+  cloudMessage('Dokumen dibuka: ' + doc.title);
+}
+async function initializeCloud() {
+  const {data, error} = await cloudClient.auth.getSession();
+  if (error) cloudMessage('Gagal memeriksa sesi: ' + error.message, true);
+  setCloudLoggedIn(data && data.session ? data.session.user : null);
+  cloudClient.auth.onAuthStateChange((_event, session) => {
+    setCloudLoggedIn(session ? session.user : null);
+  });
+}
+initializeCloud();
+
+</script>
+</body></html>
